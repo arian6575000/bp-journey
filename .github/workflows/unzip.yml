@@ -1,4 +1,3 @@
-
 name: Extract ZIP in Repository Root
 
 on:
@@ -6,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   unzip:
@@ -24,9 +24,16 @@ jobs:
             exit 1
           fi
 
-          unzip -o "$ZIP_FILE" -d .
-
+          echo "Extracting $ZIP_FILE"
+          # .github is excluded: GITHUB_TOKEN is not allowed to modify workflow files.
+          unzip -o "$ZIP_FILE" -d . -x ".github/*" "__MACOSX/*"
           rm -f "$ZIP_FILE"
+
+          test -f package.json || {
+            echo "ERROR: package.json not found in repository root after extraction."
+            echo "The ZIP must contain the project files directly (not inside a sub-folder)."
+            exit 1
+          }
 
       - name: Commit extracted files
         run: |
@@ -35,3 +42,10 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "Extract ZIP into repository root"
           git push
+
+      # Pushes made with GITHUB_TOKEN do not trigger other workflows,
+      # so start the APK build explicitly.
+      - name: Trigger APK build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run android-apk.yml --ref "${{ github.ref_name }}"
