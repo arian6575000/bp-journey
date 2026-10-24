@@ -55,7 +55,10 @@ jobs:
 
       - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx3g"
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a -Dorg.gradle.jvmargs="-Xmx3g"
+
+      - name: Re-sign APK with v1+v2+v3 for wider installer compatibility
+        run: APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort | tail -1) && "$APKSIGNER" sign --ks android/app/debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true android/app/build/outputs/apk/release/app-release.apk && "$APKSIGNER" verify --verbose android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
