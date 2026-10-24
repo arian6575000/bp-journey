@@ -1,55 +1,31 @@
-# BP Journey — Quick Add Reading (Expo + React Native + TypeScript)
+# BP Journey
 
-This is a production-oriented feature starter for the Quick Add Reading screen. It is not a complete app or a medical device.
+Offline blood-pressure tracker (Expo SDK 58, React Native, TypeScript, Expo Router, SQLite). English and Urdu (RTL), no account, data stays on the phone.
 
-## Included
-- React Native / Expo TypeScript screen with glass-inspired cards
-- English and Urdu labels with RTL layout direction
-- SQLite persistence and versioned schema initialization
-- Date/time pickers
-- Validation and cautious safety messaging
-- Double-submit protection
-- Beginner-friendly guided entry with plain-language hints for top/bottom values
-- Collapsible optional details so first-time users see a short form first
-- Bilingual measurement technique help (English/Urdu)
-- Demo-only banner makes the prefilled sample values explicit
-- Repository and domain types separated from UI
+## Features
+- Quick Add (systolic, diastolic, optional pulse) with optional details (date/time, arm, position, time of day, notes)
+- Central validation (errors vs data-quality warnings vs emergency flag), safety flow for very high readings
+- Home dashboard, History (filters, sorting, paging), Trends (SVG charts, weekly/monthly summaries, distribution)
+- Reading details, edit, delete; measurement guide with checklist
+- Local reminders (weekly schedules, pause, test), PDF and CSV reports, JSON backup, delete-all
+- Light/dark theme, English/Urdu, accessibility labels, large touch targets
 
-## Install into an Expo project
-
-Use a current Expo SDK and install compatible versions with `npx expo install`:
-
+## Develop
 ```bash
-npx expo install expo-sqlite @react-native-community/datetimepicker expo-localization
-npx expo install react-native-safe-area-context
+npm install --legacy-peer-deps
+npm run typecheck
+npm run lint
+npm test
+npx expo start
 ```
 
-Copy `src/` into your project. Example route:
-- Expo Router: copy `src/app/readings/add.tsx` to `app/readings/add.tsx`
-- Make sure your app root has a `SafeAreaProvider` if your setup requires it.
-- This screen uses a lightweight local translation helper; replace with your app-wide i18n provider if one exists.
+## Build the APK with GitHub Actions
+1. Put `unzip.yml` and `android-apk.yml` in `.github/workflows/` (upload the files; do not paste).
+2. Upload the project ZIP to the repository root, run **Extract ZIP in Repository Root**; it starts the build.
+3. Download the APK from the run's artifacts or from Releases.
 
-## Important integration notes
-- `getDatabase()` initializes the SQLite schema once per process. Keep a single connection in app-wide infrastructure for a larger app.
-- The default `profile_id` is `"local-profile"` as a single-user placeholder. Replace it with your actual profile ID when profiles are implemented.
-- Date/time is saved as ISO UTC plus the device's offset at measurement time. The local display uses the device locale.
-- A high reading is saved only after the user acknowledges the safety notice. The app never diagnoses or recommends medication changes.
-- Numeric validation bounds are data-entry safeguards, not clinical diagnostic thresholds. Have the bounds and all medical copy reviewed by a qualified clinician before release.
-- This feature does not implement database encryption. SQLite persistence is not encryption. Before storing real health data in a public release, choose and verify an encryption/key-management approach.
-- Demo defaults (120/80, pulse 72, left arm, sitting, morning) are explicitly marked as example defaults in code and should be removed or replaced with empty fields in a real first-use form if you don't want prefilled values.
-
-## UX upgrade in this revision
-- The main form prioritizes the two BP values and pulse. Optional metadata is collapsed by default to reduce cognitive load.
-- “How to take a reading” explains quiet rest, posture, arm level, cuff placement and avoiding talking. This is general education, not a diagnosis.
-- The 120/80 and pulse 72 defaults remain prototype-only; users must replace them with their own measurement before saving. For a real release, consider starting with blank values instead.
-- English and Urdu helper copy is included. Validate Urdu typography and true RTL direction in the full app shell on real Android devices.
-
-## Suggested tests
-- blank, non-integer, negative and extreme inputs
-- systolic <= diastolic confirmation
-- high-reading safety acknowledgement
-- past/future date/time behavior
-- repeated Save taps
-- SQLite initialization failure and write failure
-- Urdu RTL layout on a physical Android device
-- app restart persistence
+## Notes and limits
+- Category labels follow the 2017 ACC/AHA adult guideline (`src/domain/classification.ts`). Have all medical copy reviewed by a clinician before public release.
+- Data is not separately encrypted by the app. Android cloud backup is disabled.
+- Reminders resume after a pause when the app is next opened.
+- The release APK is signed with the debug key (installable for testing, not for Play Store).
